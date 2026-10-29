@@ -1,0 +1,596 @@
+<title>حراس السكون</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Lalezar&display=swap" rel="stylesheet">
+<style>
+/* Layout: full-screen game shell for classroom projection. Top bar, scrolling stage area, team scoreboard docked at the bottom.
+   Look: night-sea navy with pearl text; gold is the "sukoon" accent and the only loud colour. */
+:root{
+  --ink:#0A0F2E;
+  --deep:#121846;
+  --panel:#1B2257;
+  --panel2:#262E70;
+  --line:rgba(255,255,255,.13);
+  --pearl:#F5F2FF;
+  --mute:#AEB5E6;
+  --gold:#FFC94A;
+  --teal:#2EE6C5;
+  --coral:#FF5C7A;
+  --violet:#A396FF;
+  --ok:#2EE6A0;
+  --bad:#FF5C7A;
+  --font-display:'Lalezar','Cairo','Segoe UI',Tahoma,sans-serif;
+  --font-body:'Cairo','Segoe UI',Tahoma,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  direction:rtl;
+  font-family:var(--font-body);
+  color:var(--pearl);
+  background:
+    radial-gradient(900px 500px at 85% -10%,rgba(163,150,255,.22),transparent 60%),
+    radial-gradient(800px 500px at 0% 110%,rgba(46,230,197,.14),transparent 60%),
+    var(--ink);
+  display:flex;flex-direction:column;
+  padding-block:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  overflow-x:hidden;
+  line-height:1.6;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* top bar */
+#top{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--font-display);font-size:1.5rem;color:var(--gold);letter-spacing:.02em;margin-inline-end:auto;white-space:nowrap}
+.pill{border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-size:.9rem;color:var(--mute);background:rgba(255,255,255,.04)}
+.iconbtn{border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-size:.9rem;background:rgba(255,255,255,.05)}
+.iconbtn:hover{background:rgba(255,255,255,.12)}
+
+#stage{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;padding-block:8px 12px}
+.screen{width:min(1100px,100%);display:flex;flex-direction:column;gap:14px;margin-block:auto}
+
+/* start */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center}
+.hero h1{font-family:var(--font-display);font-weight:400;font-size:clamp(2.6rem,min(8vw,12vh),5.2rem);line-height:1;margin:0;color:var(--pearl);text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p{color:var(--mute);font-size:clamp(1rem,1.8vw,1.3rem);margin:12px 0 0;max-width:34ch}
+.demo{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:28px;padding:18px 16px;text-align:center;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.demo small{color:var(--mute);letter-spacing:.06em}
+.demo .line{font-size:clamp(2rem,5vw,3.6rem);font-weight:900;min-height:1.5em;display:flex;justify-content:center;gap:.4em;align-items:baseline}
+.demo .part{transition:opacity .5s,transform .5s}
+.demo .gone{opacity:0;transform:translateY(-14px)}
+.demo .sk{color:var(--gold)}
+.demo .label{font-size:1rem;color:var(--teal);font-weight:700;min-height:1.6em}
+.panel{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:22px;padding:12px 18px}
+.panel h3{margin:0 0 10px;font-size:1rem;color:var(--mute);font-weight:600;letter-spacing:.04em}
+.settings{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:54px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--gold);color:#1a1400;border-color:var(--gold)}
+.teamsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.teamin{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border:2px solid var(--tc);border-radius:16px;padding:6px 12px}
+.teamin span{flex:none;width:2rem;height:2rem;border-radius:50%;background:var(--tc);color:#10122a;display:grid;place-items:center;font-family:var(--font-display);font-size:1.3rem;line-height:1}
+.teamin input{flex:1;min-width:0;background:none;border:0;color:var(--pearl);font:inherit;font-weight:700;font-size:1.05rem;padding:6px 0}
+.bigbtn{align-self:center;font-family:var(--font-display);font-size:clamp(1.6rem,3.4vw,2.4rem);background:var(--gold);color:#1a1400;border-radius:22px;padding:6px 52px 10px;box-shadow:0 8px 0 #b98a14,0 18px 40px rgba(255,201,74,.25);transition:transform .12s,box-shadow .12s}
+.bigbtn:hover{transform:translateY(-2px)}
+.bigbtn:active{transform:translateY(6px);box-shadow:0 2px 0 #b98a14}
+
+/* intro */
+.intro{display:grid;grid-template-columns:1fr;gap:16px;text-align:center}
+.path{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.node{width:48px;height:48px;border-radius:50%;border:2px solid var(--line);font-family:var(--font-display);font-size:1.3rem;background:rgba(255,255,255,.05);color:var(--mute)}
+.node.done{background:var(--teal);color:#06231d;border-color:var(--teal)}
+.node.now{background:var(--gold);color:#1a1400;border-color:var(--gold);transform:scale(1.12)}
+.kicker{color:var(--mute);letter-spacing:.08em;font-weight:600}
+.stagename{font-family:var(--font-display);font-size:clamp(2.6rem,7vw,5rem);line-height:1.1;margin:0;color:var(--sc,var(--gold));text-wrap:balance}
+.tip{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:22px 26px;font-size:clamp(1.15rem,2.4vw,1.8rem);font-weight:600;line-height:1.9;max-width:900px;margin-inline:auto}
+.chip{display:inline-block;padding:0 14px;border-radius:12px;background:rgba(255,201,74,.16);color:var(--gold);font-weight:900;margin-inline:3px}
+.chip.t{background:rgba(46,230,197,.16);color:var(--teal)}
+.chip.c{background:rgba(255,92,122,.16);color:var(--coral)}
+
+/* question */
+.qtop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.turn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;padding:6px 20px 6px 16px;background:var(--tc);color:#10122a;font-weight:900;font-size:clamp(1rem,2vw,1.35rem)}
+.turn.steal{animation:pulse .9s ease-in-out infinite}
+.qcount{color:var(--mute);font-weight:700}
+.qprompt{font-size:clamp(1.15rem,2.4vw,1.7rem);font-weight:700;color:var(--mute);text-align:center;text-wrap:balance}
+.qsent{font-size:clamp(1.7rem,4.2vw,3.2rem);font-weight:900;text-align:center;line-height:1.9;background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:26px;padding:16px 22px;text-wrap:balance}
+.qsent .v{color:var(--gold);text-decoration:underline;text-decoration-thickness:4px;text-underline-offset:10px;text-decoration-color:rgba(255,201,74,.55)}
+.blank{display:inline-block;min-width:3.2em;border-bottom:5px dashed var(--gold);margin-inline:.2em;height:1em;vertical-align:baseline}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.opts.wide{grid-template-columns:1fr}
+.opt{display:flex;align-items:center;gap:14px;text-align:start;background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:14px 18px;font-size:clamp(1.25rem,2.8vw,2.1rem);font-weight:700;transition:transform .12s,background .15s,border-color .15s;min-width:0}
+.opts.wide .opt{font-size:clamp(1.05rem,2.2vw,1.6rem)}
+.opt .k{flex:none;width:2.1rem;height:2.1rem;border-radius:10px;background:rgba(255,255,255,.1);display:grid;place-items:center;font-size:1rem;color:var(--mute);font-weight:900}
+.opt:hover:not(:disabled){transform:translateY(-3px);border-color:var(--gold);background:var(--panel2)}
+.opt:disabled{cursor:default}
+.opt.dim{opacity:.35}
+.opt.right{background:rgba(46,230,160,.2);border-color:var(--ok);animation:pop .5s}
+.opt.wrong{background:rgba(255,92,122,.2);border-color:var(--bad);animation:shake .45s}
+.opts.three .opt{justify-content:center;font-size:clamp(1.5rem,3.4vw,2.6rem);font-family:var(--font-display);font-weight:400;padding-block:18px}
+.opt.cr{border-color:var(--teal)}.opt.cn{border-color:var(--gold)}.opt.cj{border-color:var(--coral)}
+.toks{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.tok{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:8px 22px;font-size:clamp(1.6rem,4vw,3rem);font-weight:900;transition:transform .12s,border-color .15s}
+.tok:hover:not(:disabled){transform:translateY(-4px) rotate(-1deg);border-color:var(--gold)}
+.tok.right{background:rgba(46,230,160,.22);border-color:var(--ok);animation:pop .5s}
+.tok.wrong{background:rgba(255,92,122,.22);border-color:var(--bad);animation:shake .45s}
+.tok.dim{opacity:.4}
+.timer{display:flex;align-items:center;gap:12px}
+.bar{flex:1;height:12px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:99px;transition:width .12s linear}
+.bar.low i{background:var(--coral)}
+.tnum{font-family:var(--font-display);font-size:1.8rem;min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+.fbw{min-height:7.5rem}
+.fb{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:14px 20px;animation:rise .3s}
+.fb .msg{flex:1;min-width:240px;font-size:clamp(1.05rem,2vw,1.45rem);font-weight:600}
+.fb .msg b{display:block;font-size:clamp(1.3rem,2.6vw,1.9rem);margin-bottom:2px}
+.fb.good b{color:var(--ok)}.fb.bad b{color:var(--coral)}
+.nextbtn{background:var(--teal);color:#06231d;font-weight:900;font-size:1.2rem;border-radius:16px;padding:10px 30px}
+
+/* scoreboard */
+#board{display:flex;gap:10px;padding-block:10px 12px;justify-content:center;flex-wrap:wrap;border-top:1px solid var(--line)}
+.team{position:relative;display:flex;align-items:center;gap:10px;min-width:170px;flex:1 1 170px;max-width:290px;background:rgba(255,255,255,.05);border:2px solid transparent;border-radius:18px;padding:6px 14px;transition:border-color .2s,background .2s,transform .2s}
+.team.on{border-color:var(--tc);background:rgba(255,255,255,.1);transform:translateY(-3px);box-shadow:0 0 0 4px color-mix(in srgb,var(--tc) 22%,transparent)}
+.team .em,.turn .nn{flex:none;width:2.1rem;height:2.1rem;border-radius:50%;background:var(--tc);color:#10122a;display:grid;place-items:center;font-family:var(--font-display);font-size:1.4rem;line-height:1}.team{min-width:150px}
+.team .nm{font-weight:900;font-size:1rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team .sc{font-family:var(--font-display);font-size:2rem;line-height:1;color:var(--tc);font-variant-numeric:tabular-nums;margin-inline-start:auto}
+.team .meta{display:flex;gap:6px;font-size:.78rem;color:var(--mute);min-height:1.2em}
+.team .tx{min-width:0;display:flex;flex-direction:column}
+.star{position:absolute;top:-12px;left:-6px;background:var(--gold);color:#1a1400;font-weight:900;border-radius:99px;padding:0 10px;font-size:.85rem;border:2px solid var(--ink)}
+.star.armed{background:var(--coral);color:#fff;animation:pulse .8s infinite}
+.plus{position:absolute;top:-8px;right:12px;font-family:var(--font-display);font-size:1.7rem;color:var(--ok);animation:float 1.3s forwards;pointer-events:none;text-shadow:0 2px 0 var(--ink)}
+
+/* final */
+.final h2{font-family:var(--font-display);font-weight:400;font-size:clamp(2.6rem,7vw,5rem);margin:0;text-align:center;color:var(--gold)}
+.podium{display:flex;gap:14px;align-items:flex-end;justify-content:center;min-height:260px}
+.pod{flex:1;max-width:220px;border-radius:22px 22px 0 0;text-align:center;padding:12px 8px;background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 80%,#fff),var(--tc));color:#10122a;display:flex;flex-direction:column;justify-content:flex-start;gap:2px;animation:rise .7s both}
+.pod .em{font-size:2.4rem;line-height:1.1;font-family:var(--font-display)}
+.pod .nm{font-weight:900;font-size:1.15rem;line-height:1.2}
+.pod .sc{font-family:var(--font-display);font-size:2.4rem;line-height:1}
+.pod .rk{font-weight:900;opacity:.7}
+.row2{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.ghost{border:2px solid var(--line);border-radius:18px;padding:8px 26px;font-weight:700;font-size:1.1rem}
+.ghost:hover{background:rgba(255,255,255,.08)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+.final h2 small{font-size:.5em;color:var(--pearl)}
+.stars{display:flex;gap:10px;justify-content:center;font-size:clamp(3rem,10vw,5rem);line-height:1}
+.fstar{color:rgba(255,255,255,.15)}.fstar.on{color:var(--gold);text-shadow:0 0 30px rgba(255,201,74,.6);animation:pop .6s both}
+.bigscore{text-align:center;font-family:var(--font-display);font-size:clamp(4rem,14vw,8rem);line-height:1;color:var(--teal)}
+.bigscore small{display:block;font-size:.25em;color:var(--mute)}
+button{touch-action:manipulation}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes float{0%{opacity:0;transform:translateY(10px)}15%{opacity:1}100%{opacity:0;transform:translateY(-40px)}}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr}
+  .settings{grid-template-columns:1fr}
+  .opts,.opts.three{grid-template-columns:1fr}
+  .opts.three{grid-template-columns:repeat(3,1fr)}
+  .team{min-width:140px}
+}
+@media (max-width:560px){
+  #top{gap:8px;padding-block:8px}
+  .brand{font-size:1.25rem}
+  .iconbtn{padding:4px 10px;font-size:.8rem}
+  #fs{display:none}
+  .pill{font-size:.8rem;padding:2px 10px}
+  .team{max-width:none}
+  .opt{padding:12px 14px}
+  .fb{padding:12px 14px}
+  .nextbtn{width:100%}
+  .screen{gap:12px}
+  .stagename{font-size:2.4rem}
+  .tip{padding:16px;font-size:1.1rem}
+  .node{width:40px;height:40px;font-size:1.1rem}
+  .opts.three{gap:8px}
+  .opts.three .opt{font-size:1.25rem;padding:14px 4px;min-width:0}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<canvas id="fx"></canvas>
+<div id="top">
+  <div class="brand">حراس السكون</div>
+  <span class="pill" id="stagepill" hidden></span>
+  <button class="iconbtn" id="snd" aria-label="الصوت">الصوت: يعمل</button>
+  <button class="iconbtn" id="fs" aria-label="ملء الشاشة">ملء الشاشة</button>
+  <button class="iconbtn" id="home" aria-label="العودة للبداية" hidden>البداية</button>
+</div>
+<main id="stage"></main>
+<div id="board" hidden></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var stageEl=$('#stage'), boardEl=$('#board');
+var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- question bank (from the lesson slides) ---------- */
+function tap(q,toks,ans,why){return{type:'tap',q:q,toks:toks,ans:ans,why:why}}
+function mcq(q,s,opts,why){return{type:'mcq',q:q,s:s,opts:opts,why:why}}   // first option is correct
+function cls(s,ans,why){return{type:'cls',q:'ما حالة الفعل المضارع الملوَّن؟',s:s,ans:ans,why:why}}
+var V=function(w){return '<span class="v">'+w+'</span>'};
+var Q1='اضغط على أداة الجزم', Q1v='اضغط على الفعل المجزوم';
+var A_LAM='لَامُ الأمر تجزم الفعل المضارع بعدها.';
+var EJ='فعل مضارع مجزوم بـ';
+
+var stages=[
+ {name:'صياد الأدوات',color:'#FFC94A',time:25,
+  tip:'يُجْزَمُ الفعل المضارع إذا سبقته إحدى أدوات الجزم:<br><span class="chip">لَمْ</span><span class="chip t">لَا الناهية</span><span class="chip c">لَامُ الأمر</span>',
+  qs:[
+   tap(Q1,['لَمْ','يُذَاكِرْ','الطَّالِبُ','لِلِامْتِحَانِ'],0,'لَمْ أداة جزم، والفعل بعدها «يُذَاكِرْ» مجزوم.'),
+   tap(Q1,['لَا','تَتَكَلَّمْ','أَثْنَاءَ','شَرْحِ','الْمُعَلِّمِ'],0,'لَا الناهية تجزم الفعل بعدها.'),
+   tap(Q1,['لِ','تَحْتَرِمْ','وَالِدَيْكَ'],0,A_LAM),
+   tap(Q1,['لَمْ','أَسْتَمِعْ','لِرِفَاقِ','السُّوءِ'],0,'لَمْ تجزم «أَسْتَمِعْ».'),
+   tap(Q1,['لَا','تُهْمِلْ','أَدَاءَ','وَاجِبَاتِكَ','الْمَدْرَسِيَّةَ'],0,'لَا الناهية جزمت «تُهْمِلْ».'),
+   tap(Q1,['لِ','يَعْمَلْ','شَبَابُ','الْوَطَنِ','بِإِخْلَاصٍ'],0,A_LAM),
+   tap(Q1v,['لَا','تَبْخَلْ','عَلَى','وَطَنِكَ','بِجُهْدِكَ'],1,'الفعل المجزوم هو «تَبْخَلْ» لأنه جاء بعد لَا الناهية.'),
+   tap(Q1v,['لَمْ','يُقَصِّرْ','آبَاؤُنَا','فِي','خِدْمَةِ','وَطَنِهِمْ'],1,'الفعل المجزوم هو «يُقَصِّرْ» بعد لَمْ.'),
+   tap(Q1v,['لَمْ','يَتَخَلَّفْ','جُنْدِيٌّ','عَنْ','وَاجِبِهِ'],1,'الفعل المجزوم هو «يَتَخَلَّفْ» بعد لَمْ.'),
+   mcq('أيُّ الأدوات الآتية ليست من أدوات الجزم؟','',['لَنْ','لَمْ','لَا الناهية','لَامُ الأمر'],'لَنْ أداة نصب وليست أداة جزم.'),
+   mcq('ما علامة جزم الفعل المضارع الصحيح الآخر؟','',['السكون','الضمة','الفتحة','الكسرة'],'علامة جزم الفعل المضارع الصحيح الآخر هي السكون.')
+ ]},
+ {name:'ركّب الفعل',color:'#FF5C7A',time:25,
+  tip:'بعد أداة الجزم يتحول آخر الفعل من الضمة إلى <span class="chip">السكون</span><br>يُذَاكِرُ ← لَمْ يُذَاكِرْ',
+  qs:[
+   mcq('اختر الفعل الصحيح:','لَمْ ____ تِلْمِيذٌ وَاجِبَهُ',['يُهْمِلْ','يُهْمِلُ','يُهْمِلَ'],'بعد لَمْ يُجزم الفعل وعلامة جزمه السكون.'),
+   mcq('اختر الفعل الصحيح:','لَا ____ عَنْ أَدَاءِ الْوَاجِبِ',['تَتَخَاذَلْ','تَتَخَاذَلُ','تَتَخَاذَلَ'],'بعد لَا الناهية يُجزم الفعل بالسكون.'),
+   mcq('اختر الفعل الصحيح:','لِ ____ شَبَابُ الْوَطَنِ بِإِخْلَاصٍ',['يَعْمَلْ','يَعْمَلُ','يَعْمَلَ'],'بعد لَامِ الأمر يُجزم الفعل بالسكون.'),
+   mcq('اختر الفعل الصحيح:','لَمْ ____ جُنْدِيٌّ عَنْ وَاجِبِهِ',['يَتَخَلَّفْ','يَتَخَلَّفُ','يَتَخَلَّفَ'],'بعد لَمْ يُجزم الفعل وعلامة جزمه السكون.'),
+   mcq('اختر الفعل الصحيح:','لَا ____ عَلَى وَطَنِكَ بِجُهْدِكَ',['تَبْخَلْ','تَبْخَلُ','تَبْخَلَ'],'بعد لَا الناهية يُجزم الفعل بالسكون.'),
+   mcq('اختر الفعل الصحيح:','لَمْ ____ لِرِفَاقِ السُّوءِ',['أَسْتَمِعْ','أَسْتَمِعُ','أَسْتَمِعَ'],'بعد لَمْ يُجزم الفعل وعلامة جزمه السكون.'),
+   mcq('اختر الفعل الصحيح:','لِ ____ هَدَفُكَ خِدْمَةَ الْوَطَنِ',['يَكُنْ','يَكُونُ','يَكُونَ'],'الفعل «يَكُونُ» مجزوم بلام الأمر فصار «يَكُنْ».'),
+   mcq('اختر الفعل الصحيح:','لَا ____ إِلَّا الْحَقَّ',['تَقُلْ','تَقُولُ','تَقُولَ'],'الفعل «تَقُولُ» مجزوم بلَا الناهية فصار «تَقُلْ».')
+ ]},
+ {name:'حوّلها بـ لم',color:'#A396FF',time:30,
+  tip:'النفي بـ <span class="chip">مَا</span> + الفعل الماضي<br>يتحول إلى <span class="chip t">لَمْ</span> + الفعل المضارع المجزوم',
+  qs:[
+   mcq('حوّل النفي بـ «مَا» إلى النفي بـ «لَمْ»:','مَا أَهْمَلَ تِلْمِيذٌ مُجْتَهِدٌ وَاجِبَهُ',['لَمْ يُهْمِلْ تِلْمِيذٌ مُجْتَهِدٌ وَاجِبَهُ','لَمْ أَهْمَلَ تِلْمِيذٌ مُجْتَهِدٌ وَاجِبَهُ','لَمْ يُهْمِلُ تِلْمِيذٌ مُجْتَهِدٌ وَاجِبَهُ'],'بعد لَمْ نأتي بالمضارع ونجزمه بالسكون.'),
+   mcq('حوّل النفي بـ «مَا» إلى النفي بـ «لَمْ»:','مَا تَخَاذَلَ آبَاؤُنَا عَنِ التَّضْحِيَةِ',['لَمْ يَتَخَاذَلْ آبَاؤُنَا عَنِ التَّضْحِيَةِ','لَمْ تَخَاذَلَ آبَاؤُنَا عَنِ التَّضْحِيَةِ','لَمْ يَتَخَاذَلُ آبَاؤُنَا عَنِ التَّضْحِيَةِ'],'الفعل بعد لَمْ مضارع مجزوم.'),
+   mcq('حوّل النفي بـ «مَا» إلى النفي بـ «لَمْ»:','مَا خَالَفَ سَائِقٌ مِثَالِيٌّ قَوَانِينَ الْمُرُورِ',['لَمْ يُخَالِفْ سَائِقٌ مِثَالِيٌّ قَوَانِينَ الْمُرُورِ','لَمْ خَالَفَ سَائِقٌ مِثَالِيٌّ قَوَانِينَ الْمُرُورِ','لَمْ يُخَالِفُ سَائِقٌ مِثَالِيٌّ قَوَانِينَ الْمُرُورِ'],'لَمْ لا تدخل على الماضي، وتجزم المضارع بالسكون.'),
+   mcq('حوّل النفي بـ «مَا» إلى النفي بـ «لَمْ»:','مَا أَجَّلَ مُوَظَّفٌ مُخْلِصٌ عَمَلَهُ إِلَى الْغَدِ',['لَمْ يُؤَجِّلْ مُوَظَّفٌ مُخْلِصٌ عَمَلَهُ إِلَى الْغَدِ','لَمْ أَجَّلَ مُوَظَّفٌ مُخْلِصٌ عَمَلَهُ إِلَى الْغَدِ','لَمْ يُؤَجِّلُ مُوَظَّفٌ مُخْلِصٌ عَمَلَهُ إِلَى الْغَدِ'],'الماضي «أَجَّلَ» يصير «يُؤَجِّلْ» مجزومًا بعد لَمْ.'),
+   mcq('حوّل النفي بـ «مَا» إلى النفي بـ «لَمْ»:','مَا بَخِلَ غَنِيٌّ كَرِيمٌ بِمَالِهِ عَلَى الْفُقَرَاءِ',['لَمْ يَبْخَلْ غَنِيٌّ كَرِيمٌ بِمَالِهِ عَلَى الْفُقَرَاءِ','لَمْ بَخِلَ غَنِيٌّ كَرِيمٌ بِمَالِهِ عَلَى الْفُقَرَاءِ','لَمْ يَبْخَلُ غَنِيٌّ كَرِيمٌ بِمَالِهِ عَلَى الْفُقَرَاءِ'],'بعد لَمْ نقول «يَبْخَلْ» بالسكون.'),
+   mcq('حوّل النفي بـ «مَا» إلى النفي بـ «لَمْ»:','مَا تَهَاوَنَ مُوَاطِنٌ صَالِحٌ فِي أَدَاءِ وَاجِبِهِ',['لَمْ يَتَهَاوَنْ مُوَاطِنٌ صَالِحٌ فِي أَدَاءِ وَاجِبِهِ','لَمْ تَهَاوَنَ مُوَاطِنٌ صَالِحٌ فِي أَدَاءِ وَاجِبِهِ','لَمْ يَتَهَاوَنُ مُوَاطِنٌ صَالِحٌ فِي أَدَاءِ وَاجِبِهِ'],'الفعل بعد لَمْ مضارع مجزوم بالسكون.')
+ ]},
+ {name:'مرفوع أم منصوب أم مجزوم؟',color:'#FFC94A',time:20,
+  tip:'<span class="chip t">مرفوع</span> إذا لم يسبقه ناصب أو جازم<br><span class="chip">منصوب</span> بعد: أَنْ · كَيْ · لَنْ · لَامِ التعليل<br><span class="chip c">مجزوم</span> بعد: لَمْ · لَا الناهية · لَامِ الأمر',
+  qs:[
+   cls(V('يُهْمِلُ')+' الْكَسُولُ وَاجِبَهُ',0,'لم يسبقه ناصب ولا جازم، فهو مرفوع بالضمة.'),
+   cls('لَنْ '+V('يُهْمِلَ')+' الْمُجْتَهِدُ وَاجِبَهُ',1,'لَنْ أداة نصب، وعلامة النصب الفتحة.'),
+   cls('لَمْ '+V('يُهْمِلْ')+' الْمُجْتَهِدُ وَاجِبَهُ',2,'لَمْ أداة جزم، وعلامة الجزم السكون.'),
+   cls('أُرِيدُ أَنْ '+V('أَسْمَعَ')+' نَصِيحَتَكَ',1,'أَنْ أداة نصب، فالفعل منصوب بالفتحة.'),
+   cls('لَا '+V('تَسْمَعْ')+' لِرِفَاقِ السُّوءِ',2,'لَا الناهية أداة جزم.'),
+   cls('أُذَاكِرُ دُرُوسِي كَيْ '+V('أَنْجَحَ'),1,'كَيْ أداة نصب، فالفعل منصوب بالفتحة.'),
+   cls(V('تُذَاكِرُ')+' سَارَةُ دُرُوسَهَا',0,'لم يسبقه ناصب ولا جازم، فهو مرفوع.'),
+   cls('لِ'+V('تُذَاكِرْ')+' دُرُوسَكَ يَا أَحْمَدُ',2,'لَامُ الأمر أداة جزم، وعلامة الجزم السكون.'),
+   cls('لَنْ '+V('يَنْهَضَ')+' الْوَطَنُ إِلَّا بِتَعَاوُنِ أَبْنَائِهِ',1,'لَنْ أداة نصب.'),
+   cls('أَفْعَلُ الْخَيْرَ كَيْ '+V('أَنَالَ')+' رِضَا اللهِ',1,'كَيْ أداة نصب، وعلامة النصب الفتحة.'),
+   cls('لَا '+V('تَرْفَعْ')+' صَوْتَكَ فِي أَثْنَاءِ الْكَلَامِ',2,'لَا الناهية أداة جزم.'),
+   cls(V('تَحْتَرِمُ')+' الْبِنْتُ أُمَّهَا',0,'لم يسبقه ناصب ولا جازم، فهو مرفوع بالضمة.')
+ ]},
+ {name:'المعرب الصغير',color:'#2EE6C5',time:35,
+  tip:'نُعْرِبُ الفعل المجزوم هكذا:<br><span class="chip">فعل مضارع مجزوم بـ(الأداة) وعلامة جزمه السكون</span>',
+  qs:[
+   mcq('ما إعراب الفعل الملوَّن؟','لَمْ '+V('يُذَاكِرْ')+' الطَّالِبُ',[EJ+'لَمْ وعلامة جزمه السكون','فعل مضارع منصوب بـلَمْ وعلامة نصبه الفتحة','فعل مضارع مرفوع وعلامة رفعه الضمة'],'الفعل جاء بعد لَمْ فهو مجزوم بالسكون.'),
+   mcq('ما إعراب الفعل الملوَّن؟','لَا '+V('تَتَكَلَّمْ')+' أَثْنَاءَ شَرْحِ الْمُعَلِّمِ',[EJ+'لَا الناهية وعلامة جزمه السكون','فعل مضارع مجزوم بـلَمْ وعلامة جزمه السكون','فعل مضارع مرفوع وعلامة رفعه الضمة'],'الأداة هنا لَا الناهية، والفعل بعدها مجزوم بالسكون.'),
+   mcq('ما إعراب الفعل الملوَّن؟','لِ'+V('تَحْتَرِمْ')+' وَالِدَيْكَ',[EJ+'لَامِ الأمر وعلامة جزمه السكون','فعل مضارع منصوب بـلَامِ الأمر وعلامة نصبه الفتحة','فعل مضارع مجزوم بـلَمْ وعلامة جزمه السكون'],'اللام هنا لَامُ الأمر، والفعل بعدها مجزوم بالسكون.'),
+   mcq('ما إعراب الفعل الملوَّن؟','لَمْ '+V('أَسْتَمِعْ')+' لِرِفَاقِ السُّوءِ',[EJ+'لَمْ وعلامة جزمه السكون',EJ+'لَا الناهية وعلامة جزمه السكون','فعل مضارع مرفوع وعلامة رفعه الضمة'],'الأداة لَمْ، والعلامة السكون.'),
+   mcq('ما إعراب الفعل الملوَّن؟','لَا '+V('تُهْمِلْ')+' أَدَاءَ وَاجِبَاتِكَ',[EJ+'لَا الناهية وعلامة جزمه السكون',EJ+'لَامِ الأمر وعلامة جزمه السكون','فعل مضارع منصوب بـلَا وعلامة نصبه الفتحة'],'لَا هنا الناهية، والفعل بعدها مجزوم بالسكون.'),
+   mcq('ما إعراب الفعل الملوَّن؟','لِ'+V('تُطِعْ')+' وَالِدَيْكَ يَا أَحْمَدُ',[EJ+'لَامِ الأمر وعلامة جزمه السكون',EJ+'لَمْ وعلامة جزمه السكون','فعل مضارع مرفوع وعلامة رفعه الضمة'],'اللام هنا لَامُ الأمر، والفعل بعدها مجزوم بالسكون.')
+ ]},
+ {name:'التحدي الأخير',color:'#FF5C7A',time:30,
+  tip:'النهي: <span class="chip c">لَا</span> + المضارع المجزوم<br>الأمر: <span class="chip">لِ</span> + المضارع المجزوم',
+  qs:[
+   mcq('تنهى أخاك عن مقاطعة المتكلم. ماذا تقول؟','',['لَا تُقَاطِعْ مُتَكَلِّمًا فِي أَثْنَاءِ حَدِيثِهِ','لَمْ تُقَاطِعْ مُتَكَلِّمًا فِي أَثْنَاءِ حَدِيثِهِ','لِتُقَاطِعْ مُتَكَلِّمًا فِي أَثْنَاءِ حَدِيثِهِ'],'النهي يكون بـ لَا الناهية + المضارع المجزوم.'),
+   mcq('تنهى أخاك عن مصاحبة رفاق السوء. ماذا تقول؟','',['لَا تُصَاحِبْ رِفَاقَ السُّوءِ','لِتُصَاحِبْ رِفَاقَ السُّوءِ','لَمْ يُصَاحِبْ رِفَاقَ السُّوءِ'],'لَا تُصَاحِبْ فيها نهي.'),
+   mcq('تنهى أخاك عن العبث بمرافق المدرسة. ماذا تقول؟','',['لَا تَعْبَثْ بِمَرَافِقِ الْمَدْرَسَةِ','لِتَعْبَثْ بِمَرَافِقِ الْمَدْرَسَةِ','لَمْ تَعْبَثْ بِمَرَافِقِ الْمَدْرَسَةِ'],'لَا تَعْبَثْ فيها نهي.'),
+   mcq('تنهى أخاك عن الإسراف في استهلاك الماء. ماذا تقول؟','',['لَا تُسْرِفْ فِي اسْتِهْلَاكِ الْمَاءِ','لِتُسْرِفْ فِي اسْتِهْلَاكِ الْمَاءِ','لَنْ تُسْرِفَ فِي اسْتِهْلَاكِ الْمَاءِ'],'النهي بـ لَا الناهية.'),
+   mcq('اطلب من صديقك إتقان عمله مستخدمًا لام الأمر:','',['لِتُتْقِنْ عَمَلَكَ','لَا تُتْقِنْ عَمَلَكَ','لَمْ تُتْقِنْ عَمَلَكَ'],'الأمر يكون بلام الأمر + المضارع المجزوم.'),
+   mcq('اطلب من صديقك الإحسان إلى الفقراء بلام الأمر:','',['لِتُحْسِنْ إِلَى الْفُقَرَاءِ','لَا تُحْسِنْ إِلَى الْفُقَرَاءِ','لَنْ تُحْسِنَ إِلَى الْفُقَرَاءِ'],'لِتُحْسِنْ فيها أمر.'),
+   mcq('اطلب من صديقك إطاعة الوالدين بلام الأمر:','',['لِتُطِعْ وَالِدَيْكَ','لَا تُطِعْ وَالِدَيْكَ','لَمْ تُطِعْ وَالِدَيْكَ'],'لِتُطِعْ فيها أمر.'),
+   mcq('اطلب من صديقك الذهاب إلى المدرسة مبكرًا بلام الأمر:','',['لِتَذْهَبْ إِلَى الْمَدْرَسَةِ مُبَكِّرًا','لَا تَذْهَبْ إِلَى الْمَدْرَسَةِ مُبَكِّرًا','لَمْ تَذْهَبْ إِلَى الْمَدْرَسَةِ مُبَكِّرًا'],'لِتَذْهَبْ فيها أمر.')
+ ]}
+];
+
+/* ---------- state ---------- */
+var TEAM_DEF=[
+ {n:'المجموعة 1',e:'1',c:'#FFC94A'},{n:'المجموعة 2',e:'2',c:'#2EE6C5'},
+ {n:'المجموعة 3',e:'3',c:'#FF5C7A'},{n:'المجموعة 4',e:'4',c:'#A396FF'},
+ {n:'المجموعة 5',e:'5',c:'#7CC4FF'},{n:'المجموعة 6',e:'6',c:'#FF9F5A'}];
+var cfg={n:1,per:5,time:1,sound:true};
+var names=[''];
+var teams=[], S={stage:0,qi:0,queue:[],turn:0,done:{}}, cur=null, timerId=null;
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+
+/* ---------- sound ---------- */
+var AC=null;
+function ac(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}return AC}
+function tone(f,d,type,at,vol){
+  if(!cfg.sound)return;var c=ac();if(!c)return;
+  try{var o=c.createOscillator(),g=c.createGain(),t=c.currentTime+(at||0);
+  o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||.18,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.05);}catch(e){}
+}
+var sfx={
+ good:function(){[523,659,784,1047].forEach(function(f,i){tone(f,.22,'triangle',i*.08)})},
+ bad:function(){tone(220,.28,'sawtooth',0,.12);tone(165,.35,'sawtooth',.14,.12)},
+ tick:function(){tone(880,.07,'square',0,.07)},
+ click:function(){tone(660,.06,'triangle',0,.1)},
+ start:function(){[392,523,659,784].forEach(function(f,i){tone(f,.2,'triangle',i*.09)})},
+ win:function(){[523,659,784,1047,784,1047,1319].forEach(function(f,i){tone(f,.28,'triangle',i*.12)})}
+};
+
+/* ---------- confetti ---------- */
+var fx=$('#fx'),fctx=fx.getContext('2d'),parts=[],fxOn=false;
+function fit(){fx.width=innerWidth;fx.height=innerHeight}
+addEventListener('resize',fit);fit();
+function confetti(n,x,y){
+  if(rm)return;
+  var cols=['#FFC94A','#2EE6C5','#FF5C7A','#A396FF','#F5F2FF'];
+  for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,s=4+Math.random()*9;
+    parts.push({x:x*fx.width,y:y*fx.height,vx:Math.cos(a)*s,vy:Math.sin(a)*s-6,w:6+Math.random()*7,h:4+Math.random()*6,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:pick(cols),life:90+Math.random()*60})}
+  if(!fxOn){fxOn=true;requestAnimationFrame(stepFx)}
+}
+function stepFx(){
+  fctx.clearRect(0,0,fx.width,fx.height);
+  parts=parts.filter(function(p){return p.life>0&&p.y<fx.height+40});
+  parts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.vx*=.99;p.r+=p.vr;p.life--;
+    fctx.save();fctx.translate(p.x,p.y);fctx.rotate(p.r);fctx.fillStyle=p.c;fctx.globalAlpha=Math.min(1,p.life/30);fctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);fctx.restore()});
+  if(parts.length)requestAnimationFrame(stepFx);else{fxOn=false;fctx.clearRect(0,0,fx.width,fx.height)}
+}
+
+/* ---------- scoreboard ---------- */
+function renderBoard(){
+  if(!teams.length){boardEl.hidden=true;return}
+  boardEl.hidden=false;
+  if(stageEl.firstElementChild)setTimeout(fitScreen,0);
+  boardEl.innerHTML=teams.map(function(t,i){
+    var on=cur&&cur.phase!=='done'&&((cur.phase==='main'&&cur.turn===i)||(cur.phase==='steal'&&cur.stealer===i));
+    var star=(cur&&cur.phase==='main'&&cur.turn===i&&t.star)?'<button class="star'+(cur.double?' armed':'')+'" data-star="1" aria-label="نجمة مضاعفة">'+(cur.double?'مضاعفة ×2 مفعّلة':'نجمة ×2')+'</button>':'';
+    return '<div class="team'+(on?' on':'')+'" style="--tc:'+t.c+'" data-t="'+i+'">'+star+
+      '<span class="em">'+t.e+'</span><div class="tx"><span class="nm">'+esc(t.n)+'</span><span class="meta">'+(t.streak>=2?'سلسلة '+t.streak+' متتالية':'&nbsp;')+'</span></div><span class="sc">'+t.score+'</span></div>';
+  }).join('');
+}
+function plus(i,n){
+  var el=boardEl.querySelector('[data-t="'+i+'"]');if(!el)return;
+  var s=document.createElement('span');s.className='plus';s.textContent='+'+n;el.appendChild(s);setTimeout(function(){s.remove()},1400);
+}
+
+/* ---------- fit every screen to the viewport (no scrolling) ---------- */
+function fitScreen(){
+  var sc=stageEl.firstElementChild;if(!sc)return;
+  sc.style.zoom=1;if(innerWidth<820)return;var z=1,g=0;
+  while(stageEl.scrollHeight>stageEl.clientHeight+1&&z>.4&&g++<40){z-=.03;sc.style.zoom=z.toFixed(2)}
+}
+addEventListener('resize',function(){fitScreen()});
+
+/* ---------- screens ---------- */
+function setChrome(mode){
+  $('#home').hidden=(mode==='start');
+  var p=$('#stagepill');
+  if(mode==='play'||mode==='intro'){p.hidden=false;p.textContent='المرحلة '+(S.stage+1)+' من '+stages.length+'  ·  '+stages[S.stage].name}else p.hidden=true;
+}
+
+var demoTimer=null;
+function startScreen(){
+  stopTimer();cur=null;teams=[];renderBoard();setChrome('start');
+  var segs=function(key,vals,labels){return '<div class="seg" data-key="'+key+'">'+vals.map(function(v,i){return '<button data-v="'+v+'" aria-pressed="'+(cfg[key]===v)+'">'+labels[i]+'</button>'}).join('')+'</div>'};
+  var tin='';for(var i=0;i<cfg.n;i++){tin+='<label class="teamin" style="--tc:'+TEAM_DEF[i].c+'"><span>'+TEAM_DEF[i].e+'</span><input id="tn'+i+'" value="'+esc(names[i])+'" maxlength="16" aria-label="اسم المجموعة '+(i+1)+'"></label>'}
+  stageEl.innerHTML=
+   '<div class="screen">'+
+    '<div class="hero"><div><h1>حراس <em>السكون</em></h1><p>لعبة جزم الفعل المضارع. حلّ الأسئلة، واجمع النقاط، وحافظ على سلسلة الإجابات الصحيحة.</p></div>'+
+    '<div class="demo" aria-hidden="true"><small>الفعل المضارع</small><div class="line"><span class="part gone" id="dp">لَمْ</span><span class="part" id="dv">يُذَاكِرُ</span></div><div class="label" id="dl">مرفوع بالضمة</div></div></div>'+
+    '<div class="panel"><h3>اسمك (اختياري)</h3><label class="teamin" style="--tc:#FFC94A"><span>★</span><input id="tn0" value="'+esc(names[0])+'" maxlength="16" placeholder="اكتب اسمك" aria-label="اسمك"></label></div>'+
+    '<div class="settings"><div class="panel"><h3>أسئلة كل مرحلة</h3>'+segs('per',[3,5],['3 أسئلة','5 أسئلة'])+'</div>'+
+    '<div class="panel"><h3>المؤقت</h3>'+segs('time',[1,0],['مفعّل','بدون مؤقت'])+'</div>'+
+    '<div class="panel"><h3>الصوت</h3>'+segs('sound',[true,false],['يعمل','صامت'])+'</div></div>'+
+    '<button class="bigbtn" id="go">ابدأ اللعبة</button></div>';
+  fitScreen();
+  var on=false;clearInterval(demoTimer);
+  demoTimer=setInterval(function(){
+    var p=$('#dp'),v=$('#dv'),l=$('#dl');if(!p){clearInterval(demoTimer);return}
+    on=!on;
+    if(on){p.classList.remove('gone');v.innerHTML='يُذَاكِرْ'.replace('ْ','<span class="sk">ْ</span>');l.textContent='لَمْ جزمت الفعل: علامة الجزم السكون'}
+    else{p.classList.add('gone');v.textContent='يُذَاكِرُ';l.textContent='مرفوع بالضمة'}
+  },2300);
+}
+function readNames(){var e=$('#tn0');if(e)names[0]=e.value.trim()}
+
+function startGame(){
+  readNames();clearInterval(demoTimer);
+  teams=[{n:names[0],e:'★',c:'#FFC94A',score:0,streak:0,star:true,right:0}];
+  S={stage:0,qi:0,queue:[],turn:0,done:{},total:0};
+  sfx.start();showIntro();
+}
+
+function showIntro(){
+  stopTimer();cur=null;var st=stages[S.stage];setChrome('intro');
+  var nodes=stages.map(function(s,i){return '<button class="node'+(i===S.stage?' now':S.done[i]?' done':'')+'" data-jump="'+i+'" aria-label="المرحلة '+(i+1)+': '+s.name+'">'+(i+1)+'</button>'}).join('');
+  stageEl.innerHTML='<div class="screen intro" style="--sc:'+st.color+'">'+
+    '<div class="path">'+nodes+'</div>'+
+    '<div class="kicker">المرحلة '+(S.stage+1)+' من '+stages.length+'</div>'+
+    '<h2 class="stagename">'+st.name+'</h2>'+
+    '<div class="tip">'+st.tip+'</div>'+
+    '<button class="bigbtn" id="begin">ابدأ المرحلة</button></div>';
+  renderBoard();
+  fitScreen();var b=$('#begin');if(b)b.focus();
+}
+function beginStage(){
+  var st=stages[S.stage];
+  S.queue=shuffle(st.qs).slice(0,cfg.per);S.qi=0;
+  showQ();
+}
+
+function buildQ(q){
+  var o={q:q};
+  if(q.type==='mcq'){o.opts=shuffle(q.opts.map(function(t,i){return{t:t,ok:i===0}}));}
+  else if(q.type==='cls'){var L=['مَرْفُوعٌ','مَنْصُوبٌ','مَجْزُومٌ'];o.opts=L.map(function(t,i){return{t:t,ok:i===q.ans}})}
+  else{o.opts=q.toks.map(function(t,i){return{t:t,ok:i===q.ans}})}
+  return o;
+}
+function showQ(){
+  stopTimer();setChrome('play');
+  var q=S.queue[S.qi],b=buildQ(q),n=teams.length;
+  cur=b;cur.turn=S.turn%n;S.turn++;cur.phase='main';cur.dis={};cur.double=false;cur.stealer=-1;cur.tick=-1;
+  var long=b.opts.some(function(o){return o.t.length>26});
+  var html='<div class="screen" id="qs">';
+  html+='<div class="qtop"><div id="turn"></div><div class="qcount">السؤال '+(S.qi+1)+' من '+S.queue.length+'</div></div>';
+  html+='<div class="qprompt">'+q.q+'</div>';
+  if(q.s)html+='<div class="qsent">'+q.s.replace('____','<span class="blank"></span>')+'</div>';
+  if(q.type==='tap'){
+    html+='<div class="toks">'+b.opts.map(function(o,i){return '<button class="tok" data-i="'+i+'">'+o.t+'</button>'}).join('')+'</div>';
+  }else{
+    var kl=q.type==='cls'?' three':(long?' wide':'');
+    var cc=['cr','cn','cj'];
+    html+='<div class="opts'+kl+'">'+b.opts.map(function(o,i){return '<button class="opt'+(q.type==='cls'?' '+cc[i]:'')+'" data-i="'+i+'">'+(q.type==='cls'?'':'<span class="k">'+(i+1)+'</span>')+'<span>'+o.t+'</span></button>'}).join('')+'</div>';
+  }
+  html+='<div class="timer" id="timer"'+(cfg.time?'':' hidden')+'><div class="bar"><i id="barin"></i></div><div class="tnum" id="tnum"></div></div>';
+  html+='<div id="fbwrap" class="fbw"></div></div>';
+  stageEl.innerHTML=html;
+  paintTurn();renderBoard();fitScreen();
+  startTimer(stages[S.stage].time);
+}
+function paintTurn(){
+  var t=$('#turn');if(!t)return;
+  if(teams.length<2){t.innerHTML='';return}
+  if(cur.phase==='steal'){var s=teams[cur.stealer];t.innerHTML='<span class="turn steal" style="--tc:'+s.c+'">'+s.e+' فرصة سرقة لـ'+esc(s.n)+' (نصف النقاط)</span>'}
+  else if(cur.phase==='main'){var m=teams[cur.turn];t.innerHTML='<span class="turn" style="--tc:'+m.c+'">'+m.e+' الدور على '+esc(m.n)+'</span>'}
+  else t.innerHTML='';
+}
+
+/* ---------- timer ---------- */
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}}
+function startTimer(sec){
+  stopTimer();if(!cfg.time||!cur)return;
+  var bar=$('#barin'),num=$('#tnum');if(!bar)return;
+  cur.dur=sec;cur.t0=performance.now();cur.remain=sec;
+  bar.style.width='100%';bar.parentNode.classList.remove('low');
+  timerId=setInterval(function(){
+    var r=Math.max(0,sec-(performance.now()-cur.t0)/1000);cur.remain=r;
+    bar.style.width=(r/sec*100)+'%';bar.parentNode.classList.toggle('low',r/sec<.3);
+    num.textContent=Math.ceil(r);
+    var c=Math.ceil(r);if(r<=5&&c!==cur.tick&&r>0){cur.tick=c;sfx.tick()}
+    if(r<=0){resolve(-1)}
+  },100);
+}
+
+/* ---------- answering ---------- */
+function resolve(i){
+  if(!cur||cur.phase==='done')return;
+  stopTimer();
+  var isSteal=cur.phase==='steal',ti=isSteal?cur.stealer:cur.turn,team=teams[ti];
+  var ok=i>=0&&cur.opts[i].ok;
+  var els=stageEl.querySelectorAll('[data-i]');
+  if(ok){
+    var pts=0,note='';
+    if(isSteal){pts=5;note='سرقة ناجحة: 5 نقاط'}
+    else{
+      pts=10;var bonus=cfg.time?Math.round((cur.remain/cur.dur)*5):0;pts+=bonus;
+      team.streak++;if(team.streak>=3){pts+=5}
+      if(cur.double){pts*=2;team.star=false}
+      note=pts+' نقطة'+(bonus?'':'')+(cur.double?' (مضاعفة)':'')+(team.streak>=3?' مع مكافأة السلسلة':'');
+    }
+    team.score+=pts;team.right++;
+    finish(true,i,els,pick(['أحسنت','ممتاز','رائع','إجابة صحيحة'])+(team.n?' يا '+esc(team.n):'')+'!',note,ti,pts);
+  }else{
+    if(i>=0){els[i].classList.add('wrong');els[i].disabled=true;cur.dis[i]=1}
+    if(!isSteal){team.streak=0;if(cur.double){cur.double=false}}
+    sfx.bad();
+    if(!isSteal&&teams.length>1){
+      cur.phase='steal';cur.stealer=(cur.turn+1)%teams.length;
+      Array.prototype.forEach.call(els,function(e,k){if(cur.dis[k])e.classList.add('dim')});
+      paintTurn();renderBoard();
+      startTimer(cfg.time?Math.min(15,stages[S.stage].time):0);
+    }else{
+      finish(false,i,els,i<0?'انتهى الوقت':'ليست هذه الإجابة','',ti,0);
+    }
+  }
+}
+function finish(good,i,els,head,note,ti,pts){
+  cur.phase='done';stopTimer();S.total++;
+  Array.prototype.forEach.call(els,function(e,k){
+    e.disabled=true;
+    if(cur.opts[k].ok){e.classList.remove('dim','wrong');e.classList.add('right')}
+    else if(!e.classList.contains('wrong'))e.classList.add('dim');
+  });
+  var last=(S.qi>=S.queue.length-1);
+  var why=cur.q.why||'';
+  var ans=good?'':'<div>الإجابة الصحيحة: <b style="display:inline;color:var(--gold);font-size:inherit">'+cur.opts.filter(function(o){return o.ok})[0].t+'</b></div>';
+  $('#fbwrap').innerHTML='<div class="fb '+(good?'good':'bad')+'"><div class="msg"><b>'+head+(note?' · '+note:'')+'</b>'+ans+'<div>'+why+'</div></div><button class="nextbtn" id="next">'+(last?'إنهاء المرحلة':'السؤال التالي')+'</button></div>';
+  if(good){sfx.good();confetti(70,.5,.55);plus(ti,pts)}
+  renderBoard();paintTurn();
+  fitScreen();var n=$('#next');if(n){n.focus({preventScroll:true});if(innerWidth<820)$('#fbwrap').scrollIntoView({block:'end',behavior:rm?'auto':'smooth'})}
+}
+function nextQ(){
+  sfx.click();
+  if(S.qi<S.queue.length-1){S.qi++;showQ();return}
+  S.done[S.stage]=1;S.stage++;
+  if(S.stage>=stages.length){final();return}
+  showIntro();
+}
+
+/* ---------- final ---------- */
+function final(){
+  stopTimer();cur=null;setChrome('final');renderBoard();
+  var t=teams[0],tot=Math.max(1,S.total),pct=t.right/tot;
+  var stars=pct>=.9?3:pct>=.7?2:pct>=.4?1:0;
+  var best=0;
+  try{best=+(localStorage.getItem('jazm-best')||0);if(t.score>best){best=t.score;localStorage.setItem('jazm-best',String(best))}}catch(e){if(t.score>best)best=t.score}
+  var head=stars===3?'بطل الجزم!':stars===2?'أداء ممتاز!':stars===1?'بداية جيدة':'حاول مرة أخرى';
+  var st='';for(var i=0;i<3;i++)st+='<span class="fstar'+(i<stars?' on':'')+'">★</span>';
+  stageEl.innerHTML='<div class="screen final"><h2>'+head+(t.n?'<br><small>'+esc(t.n)+'</small>':'')+'</h2>'+
+   '<div class="stars">'+st+'</div><div class="bigscore">'+t.score+'<small>نقطة</small></div>'+
+   '<div class="row2"><span class="pill">إجابات صحيحة: '+t.right+' من '+S.total+'</span><span class="pill">أفضل نتيجة لك: '+best+'</span></div>'+
+   '<div class="row2"><button class="bigbtn" id="again">العب من جديد</button><button class="ghost" id="tomenu">تغيير الاسم</button></div></div>';
+  fitScreen();sfx.win();confetti(160,.3,.4);confetti(160,.7,.4);setTimeout(function(){confetti(140,.5,.3)},600);
+}
+
+/* ---------- events ---------- */
+stageEl.addEventListener('click',function(e){
+  var t=e.target.closest('button');if(!t)return;ac();
+  if(t.id==='go'){startGame();return}
+  if(t.id==='begin'){sfx.click();beginStage();return}
+  if(t.id==='next'){nextQ();return}
+  if(t.id==='again'){startGame();return}
+  if(t.id==='tomenu'){startScreen();return}
+  if(t.dataset.jump!==undefined){S.stage=+t.dataset.jump;sfx.click();showIntro();return}
+  if(t.dataset.i!==undefined){if(cur&&cur.phase!=='done'&&!cur.dis[t.dataset.i])resolve(+t.dataset.i);return}
+  var seg=t.closest('.seg');
+  if(seg){readNames();var key=seg.dataset.key,v=t.dataset.v;cfg[key]=(v==='true')?true:(v==='false')?false:+v;sfx.click();startScreenKeep();}
+});
+function startScreenKeep(){startScreen()}
+boardEl.addEventListener('click',function(e){
+  var s=e.target.closest('[data-star]');
+  if(s&&cur&&cur.phase==='main'){cur.double=!cur.double;sfx.click();renderBoard()}
+});
+document.addEventListener('keydown',function(e){
+  if(e.target&&e.target.tagName==='INPUT')return;
+  if(/^[1-9]$/.test(e.key)&&cur&&cur.phase!=='done'){
+    var el=stageEl.querySelector('[data-i="'+(+e.key-1)+'"]');if(el&&!el.disabled)el.click();
+  }
+});
+$('#snd').addEventListener('click',function(){cfg.sound=!cfg.sound;this.textContent='الصوت: '+(cfg.sound?'يعمل':'صامت');if(cfg.sound){ac();sfx.click()}});
+$('#fs').addEventListener('click',function(){
+  try{if(document.fullscreenElement){document.exitFullscreen()}else{var p=document.documentElement.requestFullscreen();if(p&&p.catch)p.catch(function(){})}}catch(err){}
+});
+$('#home').addEventListener('click',startScreen);
+
+startScreen();
+})();
+</script>
